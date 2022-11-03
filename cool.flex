@@ -54,45 +54,116 @@ int str_count = 0;
  * Define names for regular expressions here.
  */
 
-WHITESPACE      [ \t\n]
 
+/*    INTEGERS AND ID's     */
 INTEGER         [0-9]+
-
 OBJ_ID          [a-z]([a-zA-Z_0-9])*
 TYPE_ID         [A-Z]([a-zA-Z_0-9])*
 
+
+/*         STRINGS         */
+QUOTE           \"
+CHAR_ANY        .
+ESC_CHAR        \\[^tfbn]
+ESC_BACKSPACE   \\b
+ESC_BS          \\\\
+ESC_TAB         \\t
+ESC_NL          \\n
+ESC_NEWLINE     \\\n
+ESC_FORMFEED    \\f
+
+
+/*         COMMENTS         */
+OPEN_COMMENT    \(\*
+CLOSE_COMMENT   \*\)
+LINE_COMMENT    --.*
+
+
+/*         KEYWORDS         */
+FALSE           f(?i:alse)
+TRUE            t(?i:rue)
+CLASS           (?i:class)
+ELSE            (?i:else)
+FI              (?i:fi)
+IF              (?i:if)
+IN              (?i:in)
+INHERITS        (?i:inherits)
+ISVOID          (?i:isvoid)
+LET             (?i:let)
+LOOP            (?i:loop)
+POOL            (?i:pool)
+THEN            (?i:then)
+WHILE           (?i:while)
+CASE            (?i:case)
+ESAC            (?i:esac)
+NEW             (?i:new)
+OF              (?i:of)
+NOT             (?i:not)
+
+/*      WHITESPACE          */
+WHITESPACE      [ \n\f\r\t\v]
+NEWLINE         \n
+
+/*         OPERATORS        */
 DARROW          =>
+ASSIGN          <-
+
+PLUS            "+"
+MINUS           "-"
+TIMES           "*"
+DIV             "/"
+
+EQUAL           "="
+LESS            "<"
+LESS_EQ         <=
+
+/*          SYMBOLS          */
+L_PAREN         \(
+R_PAREN         \)
+L_BRACKET       "{"
+R_BRACKET       "}"
+
+SEMI_COLON      ;
+COLON           :
+COMMA           ,
+DOT             .
+NEG             "~"
+AT              "@"
+
 
 %%
- /*
-  *     NEWLINES
+
+
+ /* -----------------------
+  *       OPERATORS
+  * -----------------------
   */
-
-
-
- /* ------------------
-  *     INTEGERS
-  * ------------------
- */
-{INTEGER}                 { return (INT_CONST); }
-
- /* ------------------
-  *    IDENTIFIERS
-  * ------------------
- */
-{TYPE_ID}                 { return (TYPEID); }
-{OBJ_ID}                  { return (OBJECTID); }
-
-
 {DARROW}		              { return (DARROW); }
 "+"                       { printf("Operator found: %s\n", yytext); }
 
-{WHITESPACE}
-
- /*
-  * Keywords are case-insensitive except for the values true and false,
-  * which must begin with a lower-case letter.
+ /* -----------------------
+  *       KEYWORDS
+  * -----------------------
   */
+
+
+
+
+
+ /* -----------------------
+  *     INTEGERS AND ID's
+  * -----------------------
+  */
+{INTEGER}                 { cool_yylval.symbol = new IntEntry(yytext, MAX_STR_CONST, str_count++); return (INT_CONST); }
+{TYPE_ID}                 { cool_yylval.symbol = new IdEntry(yytext, MAX_STR_CONST,  str_count++); return (TYPEID); }
+{OBJ_ID}                  { cool_yylval.symbol = new IdEntry(yytext, MAX_STR_CONST,  str_count++); return (OBJECTID); }
+
+ /* ----------------------------
+  *    WHITESPACE AND ERRORS
+  * ----------------------------
+  */
+
+{WHITESPACE}              { }
 
 
  /*
