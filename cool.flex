@@ -40,7 +40,6 @@ extern int verbose_flag;
 
 extern YYSTYPE cool_yylval;
 
-bool is_commented = false;
 int comment_count = 0;
 int str_count = 0;
 
@@ -136,8 +135,15 @@ AT              "@"
   *  NEWLINES AND COMMENTS
   * -----------------------
   */
-{NEWLINE}                 { curr_lineno++; }
+<INITIAL,COMMENT_STATE>{NEWLINE}      { curr_lineno++; }
 
+<INITIAL,COMMENT_STATE>{OPEN_COMMENT} { comment_count++; BEGIN(COMMENT_STATE); }
+<INITIAL>{CLOSE_COMMENT}              { cool_yylval.error_msg = "Unmatched *)"; return (ERROR); }
+<COMMENT_STATE>{CLOSE_COMMENT}        { if (comment_count > 0) { comment_count--; }
+                                        if (comment_count == 0){ BEGIN(INITIAL);  } }
+<COMMENT_STATE>{CHAR_ANY}             { }
+<COMMENT_STATE><<EOF>>                { cool_yylval.error_msg = "EOF in comment"; BEGIN(INITIAL); return (ERROR); }
+{LINE_COMMENT}                        { }
 
  /* ------------------------
   *  OPERATORS AND SYMBOLS
