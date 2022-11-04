@@ -126,32 +126,82 @@ R_BRACKET       "}"
 SEMI_COLON      ;
 COLON           :
 COMMA           ,
-DOT             .
+DOT             "."
 NEG             "~"
 AT              "@"
 
 
 %%
-
-
  /* -----------------------
-  *       OPERATORS
+  *  NEWLINES AND COMMENTS
   * -----------------------
+  */
+{NEWLINE}                 { curr_lineno++; }
+
+
+ /* ------------------------
+  *  OPERATORS AND SYMBOLS
+  * ------------------------
   */
 {DARROW}		              { return (DARROW); }
-"+"                       { printf("Operator found: %s\n", yytext); }
+{ASSIGN}		              { return (ASSIGN); }
+
+{PLUS}		                { return ('+'); }
+{MINUS}		                { return ('-'); }
+{TIMES}		                { return ('*'); }
+{DIV}		                  { return ('/'); }
+
+{EQUAL}		                { return ('='); }
+{LESS_EQ}		              { return (LE);  }
+{LESS}		                { return ('<'); }
+
+{L_PAREN}		              { return ('('); }
+{R_PAREN}		              { return (')'); }
+{L_BRACKET}		            { return ('{'); }
+{R_BRACKET}		            { return ('}'); }
+
+{SEMI_COLON}		          { return (';'); }
+{COLON}		                { return (':'); }
+{COMMA}		                { return (','); }
+{DOT}		                  { return ('.'); }
+{NEG}		                  { return ('~'); }
+{AT}		                  { return ('@'); }
+
 
  /* -----------------------
-  *       KEYWORDS
+  *        KEYWORDS
+  * -----------------------
+  */
+{FALSE}		                { cool_yylval.boolean = false; return(BOOL_CONST); }
+{TRUE}		                { cool_yylval.boolean = true;  return(BOOL_CONST); }
+
+{CLASS}		                { return (CLASS);     }
+{ELSE}		                { return (ELSE);      }
+{FI}		                  { return (FI);        }
+{IF}		                  { return (IF);        }
+{IN}		                  { return (IN);        }
+{INHERITS}		            { return (INHERITS);  }
+{ISVOID}		              { return (ISVOID);    }
+{LET}		                  { return (LET);       }
+{LOOP}		                { return (LOOP);      }
+{POOL}		                { return (POOL);      }
+{THEN}		                { return (THEN);      }
+{WHILE}		                { return (WHILE);     }
+{CASE}		                { return (CASE);      }
+{ESAC}		                { return (ESAC);      }
+{NEW}		                  { return (NEW);       }
+{OF}		                  { return (OF);        }
+{NOT}		                  { return (NOT);       }
+
+ /* -----------------------
+  *        STRINGS
   * -----------------------
   */
 
 
 
-
-
  /* -----------------------
-  *     INTEGERS AND ID's
+  *    INTEGER AND ID's
   * -----------------------
   */
 {INTEGER}                 { cool_yylval.symbol = new IntEntry(yytext, MAX_STR_CONST, str_count++); return (INT_CONST); }
@@ -165,12 +215,6 @@ AT              "@"
 
 {WHITESPACE}              { }
 
-
- /*
-  *  String constants (C syntax)
-  *  Escape sequence \c is accepted for all characters c. Except for 
-  *  \n \t \b \f, the result is c.
-  *
-  */
+{CHAR_ANY}                {cool_yylval.error_msg = yytext; return (ERROR); }
 
 %%
