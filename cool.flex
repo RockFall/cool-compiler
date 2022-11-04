@@ -63,13 +63,13 @@ TYPE_ID         [A-Z]([a-zA-Z_0-9])*
 /*         STRINGS         */
 QUOTE           \"
 CHAR_ANY        .
-ESC_CHAR        \\[^tfbn]
-ESC_BACKSPACE   \\b
-ESC_BS          \\\\
+CHAR_ESC        \\[^\\tfbn]
 ESC_TAB         \\t
+ESC_FF          \\f
+ESC_BS          \\b
 ESC_NL          \\n
+ESC_BSS         \\\\
 ESC_NEWLINE     \\\n
-ESC_FORMFEED    \\f
 
 
 /*         COMMENTS         */
@@ -199,10 +199,117 @@ AT              "@"
 {OF}		                  { return (OF);        }
 {NOT}		                  { return (NOT);       }
 
+
  /* -----------------------
   *        STRINGS
   * -----------------------
   */
+<INITIAL>{QUOTE}                  {BEGIN(STRING_STATE); string_buf[0] = '\0'; string_buf_ptr = string_buf; }
+<STRING_STATE>{QUOTE}             { *string_buf_ptr = '\0'; 
+                                    cool_yylval.symbol = new StringEntry(string_buf, string_buf_ptr - string_buf, str_count++); 
+                                    BEGIN(INITIAL); 
+                                    return (STR_CONST); 
+                                  }
+
+<STRING_STATE>{ESC_TAB}            {
+                                    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+                                      cool_yylval.error_msg = "String constant too long";
+                                      BEGIN(STRING_ERROR);
+                                      return (ERROR);
+                                    }
+                                    *string_buf_ptr = '\t';
+                                    string_buf_ptr++;
+                                  }
+<STRING_STATE>{ESC_FF}            {
+                                    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+                                      cool_yylval.error_msg = "String constant too long";
+                                      BEGIN(STRING_ERROR);
+                                      return (ERROR);
+                                    }
+                                    *string_buf_ptr = '\f';
+                                    string_buf_ptr++;
+                                  }
+<STRING_STATE>{ESC_BS}            {
+                                    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+                                      cool_yylval.error_msg = "String constant too long";
+                                      BEGIN(STRING_ERROR);
+                                      return (ERROR);
+                                    }
+                                    *string_buf_ptr = '\b';
+                                    string_buf_ptr++;
+                                  }
+<STRING_STATE>{ESC_NL}            {
+                                    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+                                      cool_yylval.error_msg = "String constant too long";
+                                      BEGIN(STRING_ERROR);
+                                      return (ERROR);
+                                    }
+                                    *string_buf_ptr = '\n';
+                                    string_buf_ptr++;
+                                  }
+
+<STRING_STATE>{ESC_BSS}            {
+                                    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+                                      cool_yylval.error_msg = "String constant too long";
+                                      BEGIN(STRING_ERROR);
+                                      return (ERROR);
+                                    }
+                                    *string_buf_ptr = '\\';
+                                    string_buf_ptr++;
+                                  }
+
+<STRING_STATE>{CHAR_ESC}          { 
+                                    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+                                      cool_yylval.error_msg = "String constant too long";
+                                      BEGIN(STRING_ERROR);
+                                      return (ERROR);
+                                    }
+                                    if (yytext[1] == '\0') {
+                                      cool_yylval.error_msg = "String contains null character";
+                                      BEGIN(STRING_ERROR);
+                                      return(ERROR);
+                                    }
+                                    *string_buf_ptr = yytext[1];
+                                    string_buf_ptr++;
+                                  }
+
+<STRING_STATE>{CHAR_ANY}          { 
+                                    if (string_buf_ptr - string_buf >= MAX_STR_CONST - 1) {
+                                      cool_yylval.error_msg = "String constant too long";
+                                      BEGIN(STRING_ERROR);
+                                      return (ERROR);
+                                    }
+                                    if (yytext[0] == '\0') {
+                                      cool_yylval.error_msg = "String contains null character";
+                                      BEGIN(STRING_ERROR);
+                                      return(ERROR);
+                                    }
+                                    *string_buf_ptr = yytext[0]; 
+                                    string_buf_ptr++;
+                                  }
+
+<STRING_STATE>{NEWLINE}           {
+                                    curr_lineno++; 
+                                    BEGIN(INITIAL); 
+                                    *string_buf_ptr = '\0'; 
+                                    cool_yylval.error_msg = "Unterminated string constant"; 
+                                    return (ERROR);
+                                  }
+<STRING_STATE>{ESC_NEWLINE}       {
+                                    curr_lineno++; 
+                                    *string_buf_ptr = '\n'; 
+                                    string_buf_ptr++;
+                                  }
+<STRING_STATE><<EOF>>             {
+                                    cool_yylval.error_msg = "EOF in string constant";
+                                    BEGIN(INITIAL);
+                                    return (ERROR);
+                                  }
+
+
+<STRING_ERROR>{NEWLINE}           { BEGIN(INITIAL); }
+<STRING_ERROR>{QUOTE}             { BEGIN(INITIAL); }
+<STRING_ERROR>{CHAR_ANY}          {  }
 
 
 
