@@ -1,0 +1,21 @@
+README file for Programming Assignment 2 (C++ edition)
+=====================================================
+Alunos:
+	Caio Henrique Dias Rocha - 2021421893
+	Eduardo Diniz Mio 		 - 2019006558
+
+A implementação seguiu a divisão em algumas secções:
+- NEWLINES AND COMMENTS
+- OPERATORS AND SYMBOLS
+- KEYWORDS
+- STRINGS
+- INTEGER AND ID's
+- WHITESPACE AND ERRORS
+
+A seguintes variáveis foram usadas como extensão:
+-> int comment_count = 0;
+	Acompanhando o nível de profundidade nos comentários
+-> int str_count = 0;
+	Acompanhando o número total de strings para usar como parâmetro no StringEntry()
+
+Implementadas seguindo o manual do flex como referência e as definições formalizadas pelo manual da linguagem cool
